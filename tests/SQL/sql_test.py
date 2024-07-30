@@ -42,7 +42,43 @@ def create_n_graded_assignments_for_teacher(number: int = 0, teacher_id: int = 1
         # Update the grade_a_counter if the grade is 'A'
         if grade == GradeEnum.A:
             grade_a_counter = grade_a_counter + 1
+    
+    # Commit changes to the database
+    db.session.commit()
 
+    # Return the count of assignments with grade 'A'
+    return grade_a_counter
+
+def create_n_submitted_assignments_for_teacher(number: int = 1, teacher_id: int = 1) -> int:
+    """
+    """
+    # Count the existing assignments with grade 'A' for the specified teacher
+    grade_a_counter: int = Assignment.filter(
+        Assignment.teacher_id == teacher_id,
+        Assignment.grade == GradeEnum.A
+    ).count()
+
+    # Create 'n' graded assignments
+    for _ in range(number):
+        # Randomly select a grade from GradeEnum
+        grade = random.choice(list(GradeEnum))
+
+        # Create a new Assignment instance
+        assignment = Assignment(
+            teacher_id=teacher_id,
+            student_id=1,
+            grade=grade,
+            content='test submit content',
+            state=AssignmentStateEnum.SUBMITTED
+        )
+
+        # Add the assignment to the database session
+        db.session.add(assignment)
+
+        # Update the grade_a_counter if the grade is 'A'
+        if grade == GradeEnum.A:
+            grade_a_counter = grade_a_counter + 1
+    
     # Commit changes to the database
     db.session.commit()
 

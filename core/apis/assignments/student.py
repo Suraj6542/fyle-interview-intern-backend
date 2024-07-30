@@ -3,6 +3,14 @@ from core import db
 from core.apis import decorators
 from core.apis.responses import APIResponse
 from core.models.assignments import Assignment
+from werkzeug.exceptions import BadRequest, HTTPException
+
+class FyleException(HTTPException):
+    status_code = 400
+    json = {
+        'error' : 'FyleError',
+        "message" : 'only a draft assignment can be submitted'
+    }
 
 from .schema import AssignmentSchema, AssignmentSubmitSchema
 student_assignments_resources = Blueprint('student_assignments_resources', __name__)
@@ -23,6 +31,9 @@ def list_assignments(p):
 def upsert_assignment(p, incoming_payload):
     """Create or Edit an assignment"""
     assignment = AssignmentSchema().load(incoming_payload)
+    if incoming_payload["content"] == None:
+        raise BadRequest("The text content for assignment can not be empty !!")
+
     assignment.student_id = p.student_id
 
     upserted_assignment = Assignment.upsert(assignment)
@@ -37,12 +48,15 @@ def upsert_assignment(p, incoming_payload):
 def submit_assignment(p, incoming_payload):
     """Submit an assignment"""
     submit_assignment_payload = AssignmentSubmitSchema().load(incoming_payload)
-
+    assignment = Assignment.query.get(incoming_payload["id"])
+    if assignment.state == "SUBMITTED":
+        raise FyleException()
     submitted_assignment = Assignment.submit(
         _id=submit_assignment_payload.id,
         teacher_id=submit_assignment_payload.teacher_id,
+        state="SUBMITTED",
         auth_principal=p
-    )
+    )  
     db.session.commit()
     submitted_assignment_dump = AssignmentSchema().dump(submitted_assignment)
     return APIResponse.respond(data=submitted_assignment_dump)
