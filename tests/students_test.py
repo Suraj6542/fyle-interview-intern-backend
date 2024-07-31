@@ -83,4 +83,7 @@ def test_assignment_resubmit_error(client, h_student_1):
             'teacher_id': 2
         })
     error_response = response.json
+<<<<<<< HEAD
     
+=======
+>>>>>>> 848d99ca82c883d7296fd090bf9b1b0369af21e6
